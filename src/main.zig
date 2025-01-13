@@ -7,8 +7,9 @@ pub fn main() !void {
         const wallet = try r.Wallet.initFromSeed(seed);
         const addr = wallet.encodedPublicKey();
         std.debug.print("{d}) {s}\n", .{ i, addr });
-        if (is_good_wallet(addr, 10, "nature", true)) {
-            std.debug.print("\tFOUND WITH SEED: {s}\n", .{seed});
+        if (is_good_wallet(addr, 10, "n1488", true)) {
+            std.debug.print(" {s}\n", .{wallet.encodedPrivateKey()});
+            std.debug.print(" FOUND WITH SEED: {s}\n", .{seed});
             break;
         }
     }
@@ -16,6 +17,24 @@ pub fn main() !void {
 
 fn is_good_wallet(address: [r.Wallet.AddressLength]u8, required_reps: i32, input: []const u8, lower_contains: bool) bool {
     return is_contain(address, input, lower_contains) or good_symillar_symbols(address, required_reps);
+    // _ = required_reps;
+    // return starts_with(address, input, lower_contains);
+}
+
+/// Looking for required input on start
+fn starts_with(row: [r.Wallet.AddressLength]u8, input: []const u8, lower: bool) bool {
+    var lowered: [r.Wallet.AddressLength]u8 = row;
+    if (lower) {
+        for (0..r.Wallet.AddressLength) |i| {
+            lowered[i] = std.ascii.toLower(row[i]);
+        }
+    }
+
+    const is_good = std.mem.eql(u8, lowered[0..input.len], input);
+    if (is_good) {
+        std.debug.print("{s}\n", .{highlight_occasion(lowered, input).?});
+    }
+    return is_good;
 }
 
 /// Looking for required input

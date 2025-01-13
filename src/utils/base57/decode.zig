@@ -2,13 +2,13 @@ const std = @import("std");
 const expectEqualSlices = std.testing.expectEqualSlices;
 const Alphabet = @import("./alphabet.zig").Alphabet;
 
-/// `Base58Encoder` is a structure for encoding byte slices into Base58 format.
+/// `Base57Encoder` is a structure for encoding byte slices into Base57 format.
 pub const Decoder = struct {
     const Self = @This();
 
-    /// Contains the Base58 alphabet used for encoding.
+    /// Contains the Base57 alphabet used for encoding.
     ///
-    /// This should be initialized with a valid Base58 character set.
+    /// This should be initialized with a valid Base57 character set.
     alpha: Alphabet = Alphabet.init(.{}) catch unreachable,
 
     /// Pass a `allocator` & `encoded` bytes buffer. `decodeAlloc` will allocate a buffer
@@ -26,8 +26,6 @@ pub const Decoder = struct {
 
     /// Pass a `encoded` and a `dest` to write decoded value into. `decode` returns a
     /// `usize` indicating how many bytes were written. Sizing/resizing, `dest` buffer is up to the caller.
-    ///
-    /// For further information on the Base58 decoding algorithm, see: https://datatracker.ietf.org/doc/html/draft-msporny-base58-03
     pub fn decode(self: *const Self, encoded: []const u8, dest: []u8) !usize {
         var index: usize = 0;
         const zero = self.alpha.encode[0];
@@ -43,7 +41,7 @@ pub const Decoder = struct {
             }
 
             for (dest[0..index]) |*byte| {
-                val += @as(usize, @intCast(byte.*)) * 58;
+                val += @as(usize, @intCast(byte.*)) * 57;
                 byte.* = @intCast(val & 0xFF);
                 val >>= 8;
             }
@@ -71,7 +69,7 @@ pub const Decoder = struct {
         return index;
     }
 
-    /// Decode a base58-encoded string (str)
+    /// Decode a base57-encoded string (str)
     /// that includes a checksum into a byte
     /// is successful return decoded otherwise error
     pub fn decodeCheckAlloc(decoder: *const Decoder, allocator: std.mem.Allocator, data: []const u8) ![]u8 {

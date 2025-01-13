@@ -6,7 +6,7 @@ const utils = @import("utils/utils.zig");
 pub const Crypto = utils.Crypto;
 pub const UUID = utils.UUID;
 pub const Wallet = utils.Wallet;
-pub const Base58 = utils.Base58;
+pub const Base57 = utils.Base57;
 
 const core = @import("core/core.zig");
 pub const NatureError = core.NatureError;
@@ -19,7 +19,6 @@ pub const Validator = network.Validator;
 pub const Network = network.Network;
 
 test "All in one" {
-    _ = @import("utils/base58/tests.zig");
     _ = Wallet;
     _ = Crypto;
     _ = Transaction;

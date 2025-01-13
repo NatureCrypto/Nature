@@ -13,8 +13,8 @@ pub const Transaction = struct {
     timestamp: i128, // Timestamp of transaction
     memo: ?[MemoMaxSize]u8,
     signature: ?[utils.Crypto.SignatureLength]u8 = null, // Ed25519 signature
-    hash: ?[utils.Crypto.Base58HashLength]u8 = null,
-    previous_hash: ?[utils.Crypto.Base58HashLength]u8 = null,
+    hash: ?[utils.Crypto.Base57HashLength]u8 = null,
+    previous_hash: ?[utils.Crypto.Base57HashLength]u8 = null,
 
     pub const CurrencySymbolLen = 8;
     pub const NATValue = 1_000_000;
@@ -23,9 +23,9 @@ pub const Transaction = struct {
     pub const MinFeeInNAT = 0.01 * NATValue;
 
     /// Init transaction by user
-    /// sender - base58 encoded address
-    /// sender_private_key - base58 encoded secret privateKey
-    /// recepient - base58 encoded address
+    /// sender - base57 encoded address
+    /// sender_private_key - base57 encoded secret privateKey
+    /// recepient - base57 encoded address
     /// amount - in NATs
     /// currency_symbol - symbol of currency that being sent (eg. `NATURE`)
     /// previous_hash - hash of previous transaction
@@ -36,7 +36,7 @@ pub const Transaction = struct {
         amount: f64,
         currency_symbol: []const u8,
         memo: ?[]const u8,
-        previous_hash: ?[utils.Crypto.Base58HashLength]u8,
+        previous_hash: ?[utils.Crypto.Base57HashLength]u8,
     ) !Transaction {
         var goodCurrencySymbol: [CurrencySymbolLen]u8 = undefined;
         if (currency_symbol.len > CurrencySymbolLen) {
@@ -85,14 +85,14 @@ pub const Transaction = struct {
         return try buffer.toOwnedSlice();
     }
 
-    pub fn getHash(self: Transaction, allocator: std.mem.Allocator) ![utils.Crypto.Base58HashLength]u8 {
+    pub fn getHash(self: Transaction, allocator: std.mem.Allocator) ![utils.Crypto.Base57HashLength]u8 {
         const json = try self.serialize(allocator);
         defer allocator.free(json);
         const hash_bytes = utils.Crypto.hash(json);
 
-        var hashb58: [utils.Crypto.Base58HashLength]u8 = undefined;
-        _ = utils.Crypto.base58FromBytes(utils.Crypto.Base58HashLength, &hash_bytes, &hashb58);
-        return hashb58;
+        var hashb57: [utils.Crypto.Base57HashLength]u8 = undefined;
+        _ = utils.Crypto.base57FromBytes(utils.Crypto.Base57HashLength, &hash_bytes, &hashb57);
+        return hashb57;
     }
 
     pub fn verifySignature(self: *Transaction) !bool {
