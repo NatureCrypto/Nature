@@ -85,6 +85,11 @@ pub const Transaction = struct {
         return try buffer.toOwnedSlice();
     }
 
+    pub fn from_object(object: std.json.ObjectMap) !Transaction {
+        _ = object;
+        return core.NatureError.NotImplemented;
+    }
+
     pub fn getHash(self: Transaction, allocator: std.mem.Allocator) ![utils.Crypto.Base57HashLength]u8 {
         const json = try self.serialize(allocator);
         defer allocator.free(json);

@@ -19,28 +19,25 @@ pub const Blockchain = struct {
     transaction_pool: TransactionPool,
     ledger: Ledger,
     consensus: Consensus,
-    network: Network,
 
     // Initializer
     pub fn init(allocator: std.mem.Allocator, validators: []Validator) Blockchain {
         // Initialize Transaction Pool
-        const tx_pool = TransactionPool.init(allocator);
+        var tx_pool = TransactionPool.init(allocator);
 
         // Initialize Ledger
-        const ledger = Ledger.init(allocator);
+        var ledger = Ledger.init(allocator);
 
         // Initialize Consensus
-        const consensus = Consensus.init(validators);
-
-        // Initialize Network
-        const _network = Network.init(allocator);
+        const consensus = Consensus.init(validators, &tx_pool, &ledger, allocator) catch {
+            @panic("Failed to init consensus");
+        };
 
         return Blockchain{
             .allocator = allocator,
             .transaction_pool = tx_pool,
             .ledger = ledger,
             .consensus = consensus,
-            .network = _network,
         };
     }
 
@@ -48,7 +45,18 @@ pub const Blockchain = struct {
     pub fn add_transaction(self: *Blockchain, tx: Transaction) !void {
         try self.transaction_pool.add_transaction(tx);
         // Broadcast the transaction to peers
-        try self.network.broadcast_transaction(tx);
+        try self.network.broadcast_transaction(tx); // TODO: Fix this
+    }
+
+    /// Function to validate transaction
+    pub fn validate_transaction(self: *Blockchain, tx: Transaction) bool {
+        const static_values_check = tx.verifySignature() and tx.currency_symbol.len <= Transaction.CurrencySymbolLen and tx.memo <= Transaction.MemoMaxSize;
+        const balances_check = bal: {
+            // TODO: Implement easy to call balance check logic from ledger and call here
+            _ = self.ledger;
+            break :bal false;
+        };
+        return static_values_check and balances_check;
     }
 
     /// Function to process transactions from the pool

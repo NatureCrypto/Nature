@@ -17,6 +17,7 @@ const network = @import("network/network.zig");
 pub const Consensus = network.Consensus;
 pub const Validator = network.Validator;
 pub const Network = network.Network;
+pub const RPC = @import("network/rpc.zig").RPC;
 
 test "All in one" {
     _ = Wallet;

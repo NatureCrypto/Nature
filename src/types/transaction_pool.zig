@@ -15,22 +15,24 @@ pub const TransactionPool = struct {
 
     /// Add a transaction to the pool
     pub fn add_transaction(self: *TransactionPool, tx: Transaction) !void {
-        try self.pool.append(tx);
+        self.pool.append(tx) catch {
+            return NatureError.AddToTransactionPoolError;
+        };
     }
 
     /// Remove a transaction from the pool by index
     pub fn remove_transaction(self: *TransactionPool, index: usize) !void {
         if (index >= self.pool.len) return NatureError.LedgerTransactionIndexOutOfBounds;
-        try self.pool.remove(index);
+        _ = self.pool.orderedRemove(index);
     }
 
     /// Get all transactions
     pub fn get_transactions(self: *TransactionPool) []Transaction {
-        return self.pool.toSlice();
+        return self.pool.toOwnedSlice();
     }
 
     /// Clear the pool
     pub fn clear(self: *TransactionPool) void {
-        self.pool.clear();
+        self.pool.clearAndFree();
     }
 };

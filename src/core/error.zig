@@ -5,4 +5,10 @@ pub const NatureError = error{
     InsufficientBalance,
     InsufficientNatureBalance, // Used for fee
     LedgerTransactionIndexOutOfBounds,
+    // RPC errors
+    RPCMethodNotFound,
+    StringifyError,
+    // Functional errors
+    NotImplemented,
+    AddToTransactionPoolError,
 };

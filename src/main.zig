@@ -2,23 +2,33 @@ const std = @import("std");
 const r = @import("root.zig");
 
 pub fn main() !void {
-    for (1..1_000_000_000 + 1) |i| {
-        const seed = r.Wallet.getRandomSeed();
-        const wallet = try r.Wallet.initFromSeed(seed);
-        const addr = wallet.encodedPublicKey();
-        std.debug.print("{d}) {s}\n", .{ i, addr });
-        if (is_good_wallet(addr, 10, "n1488", true)) {
-            std.debug.print(" {s}\n", .{wallet.encodedPrivateKey()});
-            std.debug.print(" FOUND WITH SEED: {s}\n", .{seed});
-            break;
+    const me = try r.Wallet.init();
+    const alloc = std.heap.page_allocator;
+    var validators = [_]r.Validator{.{ .addr = "0.0.0.0", .public_key = me.encodedPublicKey() }};
+    var blockchain = r.Blockchain.init(alloc, &validators);
+    var server = r.Network.init(alloc, &blockchain);
+    try server.start_server(r.Network.MAINNET_PORT);
+}
+
+const REP = 15;
+fn find_address() !void {
+    for (0..REP) |reps| {
+        for (1..1_000_000) |i| {
+            const seed = r.Wallet.getRandomSeed();
+            const wallet = try r.Wallet.initFromSeed(seed);
+            const addr = wallet.encodedPublicKey();
+            std.debug.print("{d}-{d}) {s}\n", .{ REP - reps, i, addr });
+            if (is_good_wallet(addr, @as(i32, @intCast(REP - reps)), "NFEE", false)) {
+                std.debug.print(" {s}\n", .{wallet.encodedPrivateKey()});
+                std.debug.print(" FOUND WITH SEED: {s}\n", .{seed});
+                return;
+            }
         }
     }
 }
 
 fn is_good_wallet(address: [r.Wallet.AddressLength]u8, required_reps: i32, input: []const u8, lower_contains: bool) bool {
     return is_contain(address, input, lower_contains) or good_symillar_symbols(address, required_reps);
-    // _ = required_reps;
-    // return starts_with(address, input, lower_contains);
 }
 
 /// Looking for required input on start
@@ -67,7 +77,17 @@ fn good_symillar_symbols(address: [r.Wallet.AddressLength]u8, required_reps: i32
         }
 
         if (reps == required_reps) {
-            std.debug.print("found on similarity.", .{});
+            const all = std.heap.page_allocator;
+            const rusize: usize = @intCast(reps);
+            const val: []u8 = all.alloc(u8, rusize) catch {
+                std.process.exit(1);
+            };
+            defer all.free(val);
+            for (0..rusize) |i| {
+                val[i] = symb;
+            }
+
+            std.debug.print("{?s}\n", .{highlight_occasion(address, val)});
             return true;
         }
     }
@@ -103,4 +123,10 @@ test "highlight2" {
     const highlighted = highlight_occasion(addr, "NCQ");
     const expected = "_NCQ_svLHhx6R2mWe6xaqEjeibcQTV6f65nufitdWwmQxLf";
     try std.testing.expectEqualSlices(u8, expected, &highlighted.?);
+}
+
+test "simmilar" {
+    const text = "NCGAKSOEJ777DIAIIOSJDAKSJDL)XPKALXOFJWL++_I(A".*;
+    const is_sim = good_symillar_symbols(text, 3);
+    try std.testing.expectEqual(true, is_sim);
 }
